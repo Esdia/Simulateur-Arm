@@ -1,0 +1,10 @@
+arm_simulator/config.h
+arm_simulator/config.log
+arm_simulator/config.status
+arm_simulator/Makefile
+arm_simulator/stamp-h1
+
+arm_simulator/*.o
+arm_simulator/arm_simulator
+arm_simulator/memory_test
+arm_simulator/send_irq
