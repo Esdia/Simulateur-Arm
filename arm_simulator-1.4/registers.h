@@ -24,6 +24,21 @@ Contact: Guillaume.Huard@imag.fr
 #define __REGISTERS_H__
 #include <stdint.h>
 
+enum Reg_Names {
+	R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14,
+	PC, R_CPSR,
+	SPSR_svc, SPSR_abt, SPSR_und, SPSR_irq, SPSR_fiq,
+	R8_fiq, R9_fiq, R10_fiq, R11_fiq, R12_fiq, R13_fiq, R14_fiq, 
+    R13_svc, R14_svc,
+    R13_abt, R14_abt,
+    R13_und, R14_und,
+	R13_irq, R14_irq,
+    R_Indefini
+};
+
+#define CPSR 16 // R_CPSR
+#define SPSR 17 // SPSR_svc, le premier SQSR défini dans l'enum
+
 typedef struct registers_data *registers;
 
 registers registers_create();

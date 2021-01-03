@@ -24,40 +24,10 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_constants.h"
 #include <stdlib.h>
 
-/*
-    Il y a 37 registres.
-    Voici les correspondances indice - registre:
-    0 à 14: R0 à R14
-    15: PC
-    16: CPSR
-    17: R13_svc
-    18: R14_svc
-    19: SPSR_svc
-    20: R13_abt
-    21: R14_abt
-    22: SPSR_abt
-    23: R13_und
-    24: R14_und
-    25: SPSR_und
-    26: R13_irq
-    27: R14_irq
-    28: SPSR_irq
-    29: R8_fiq
-    30: R9_fiq
-    31: R10_fiq
-    32: R11_fiq
-    33: R12_fiq
-    34: R13_fiq
-    35: R14_fiq
-    36: SPSR_fiq
+#define nb_arm_registers 37
 
-    Pour toutes les fonctions dans lesquelles reg est passé en paramètre, il
-    s'agira toujours d'un entier entre 0 et 17 (pour R0 à PC + CPSR + SPSR).
-    C'est aux fonctions read_register et write_register de faire le lien entre
-    le mode et le numéro de registre pour lire et écrire dans le bon registre.
-*/
 struct registers_data {
-    uint32_t* data;
+    uint32_t data[nb_arm_registers];
     size_t size;
 
     uint8_t mode;
@@ -65,17 +35,12 @@ struct registers_data {
 
 registers registers_create() {
     registers r = malloc(sizeof(struct registers_data));
-
-    r->size = 37; // 31 General purpose + 6 status
-    r->data = malloc(r->size * sizeof(uint32_t));
-
+    r->size = nb_arm_registers;
     r->mode = USR;
-
     return r;
 }
 
 void registers_destroy(registers r) {
-    free(r->data);
     free(r);
 }
 
@@ -94,111 +59,117 @@ int in_a_privileged_mode(registers r) {
 /*
     Cette fonction utilise le mode et le numéro de registre pour
     retrouver le bon indice dans le tableau data de r
-    On suppose que 0 <= reg <= 17
 */
 uint8_t get_index_by_mode(registers r, uint8_t reg) {
-    if(get_mode(r) == USR || get_mode(r) == SYS) return reg;
+    switch (reg) {
+    case R0: // Unbanked register
+    case R1: // Unbanked register
+    case R2: // Unbanked register
+    case R3: // Unbanked register
+    case R4: // Unbanked register
+    case R5: // Unbanked register
+    case R6: // Unbanked register
+    case R7: // Unbanked register
+    case PC:
+    case CPSR:
+        return reg;
 
-    if(reg <= 7) {
-        // Unbanked registers
-        return reg;
-    } else if(reg == 15) {
-        // PC
-        return reg;
-    } else if(reg == 16) {
-        // CPSR
-        return reg;
-    } else if(reg == 17) {
-        // SPSR
+    case SPSR: {
         switch (get_mode(r)) {
             case FIQ:
-                return 36;
+                return SPSR_fiq;
             case IRQ:
-                return 28;
+                return SPSR_irq;
             case UND:
-                return 25;
+                return SPSR_und;
             case ABT:
-                return 22;
+                return SPSR_abt;
             case SVC:
-                return 19;            
-            default:
-                return -1; // Ne devrait jamais arriver
+                return SPSR_svc;
+            default: // USR ou SYS
+                return R_Indefini;
         }
-    } else {
-        // Banked registers
-        if(reg <= 12) {
-            // Les registres R8 à R12 ne sont remplacés que pour le mode FIQ
-            if(get_mode(r) != FIQ) {
-                return reg;
-            } else {
-                return reg + 21;
-            }
-        } else {
-            switch (get_mode(r)) {
-                case FIQ:
-                    return reg + 21;
-                case IRQ:
-                    return reg + 13;
-                case UND:
-                    return reg + 10;
-                case ABT:
-                    return reg + 7;
-                case SVC:
-                    return reg + 4;
-                default:
-                    return -1; // Ne devrait jamais arriver
-            }
-        }
+        break;
     }
+    
+    case R8:
+    case R9:
+    case R10:
+    case R11:
+    case R12: {
+        // Les registres R8 à R12 ne sont remplacés que pour le mode FIQ
+        if(get_mode(r) != FIQ) return reg;
+        return R8_fiq + (reg - R8);
+    }
+
+    case R13:
+    case R14: {
+        switch (get_mode(r)) {
+            case FIQ:
+                return R13_fiq + (reg - R13);
+            case IRQ:
+                return R13_irq + (reg - R13);
+            case UND:
+                return R13_und + (reg - R13);;
+            case ABT:
+                return R13_abt + (reg - R13);;
+            case SVC:
+                return R13_svc + (reg - R13);;
+            default: // USR ou SYS
+                return reg;
+        }
+        break;
+    }
+    
+    default:
+        return R_Indefini;
+    }
+
+    return R_Indefini; // Ne devrait jamais arriver car tous les case du switch font un return
 }
 
-/*
-    Pour les correspondances entre mode/numéro de registre et l'indice
-    utilisé, voir le commentaire ligne 27, sur struct registers
-*/
 uint32_t read_register(registers r, uint8_t reg) {
-    if(reg > 17) return -1;
-    if(reg == 17 && (!current_mode_has_spsr(r))) return -1;
-
     uint8_t index = get_index_by_mode(r, reg);
+    if(index == R_Indefini) return -1;
+
     return r->data[index];
 }
 
 uint32_t read_usr_register(registers r, uint8_t reg) {
-    if(reg > 16) return -1; // En mode USR, il n'y a pas de SPSR
+    if(reg > CPSR) return -1; // En mode USR, il n'y a pas de SPSR
 
     return r->data[reg];
 }
 
 uint32_t read_cpsr(registers r) {
-    return read_usr_register(r, 16);
+    return read_usr_register(r, CPSR);
 }
 
 uint32_t read_spsr(registers r) {
-    // La fonction write_register gère déjà le cas où on ne peut
+    // La fonction read_register gère déjà le cas où on ne peut
     // pas lire le SPSR
-    return read_register(r, 17);
+    return read_register(r, SPSR);
 }
 
 void write_register(registers r, uint8_t reg, uint32_t value) {
-    if(reg > 17) return;
-    if(reg == 17 && (!current_mode_has_spsr(r))) return;
-
     uint8_t index = get_index_by_mode(r, reg);
+    if(index == R_Indefini) return;
+
     r->data[index] = value;
 }
 
 void write_usr_register(registers r, uint8_t reg, uint32_t value) {
-    if(reg > 16) return;
+    if(reg > CPSR) return;
+
     r->data[reg] = value;
 }
 
 void write_cpsr(registers r, uint32_t value) {
-    write_usr_register(r, 16, value);
+    write_usr_register(r, CPSR, value);
 }
 
 void write_spsr(registers r, uint32_t value) {
     // La fonction write_register gère déjà le cas où on ne peut
     // pas écrire dans le SPSR
-    write_register(r, 17, value);
+    write_register(r, SPSR, value);
 }
