@@ -234,3 +234,15 @@ int get_flag(arm_core p, int flag) {
 
     return get_bit(val, flag);
 }
+
+void set_flag(arm_core p, int flag, int val) {
+    uint32_t cpsr_val = arm_read_cpsr(p);
+    
+    if(val) {
+        cpsr_val = set_bit(cpsr_val, flag);
+    } else {
+        cpsr_val = clr_bit(cpsr_val, flag);
+    }
+
+    arm_write_cpsr(p, cpsr_val);
+}

@@ -56,6 +56,7 @@ int arm_write_half(arm_core p, uint32_t address, uint16_t value);
 int arm_write_word(arm_core p, uint32_t address, uint32_t value);
 
 int get_flag(arm_core p, int flag);
+void set_flag(arm_core p, int flag, int val);
 
 #include "trace_location.h"
 #endif
