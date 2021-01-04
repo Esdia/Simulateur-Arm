@@ -1,24 +1,24 @@
 /*
-Armator - simulateur de jeu d'instruction ARMv5T à but pédagogique
+Armator - simulateur de jeu d'instruction ARMv5T ï¿½ but pï¿½dagogique
 Copyright (C) 2011 Guillaume Huard
 Ce programme est libre, vous pouvez le redistribuer et/ou le modifier selon les
-termes de la Licence Publique Générale GNU publiée par la Free Software
-Foundation (version 2 ou bien toute autre version ultérieure choisie par vous).
+termes de la Licence Publique Gï¿½nï¿½rale GNU publiï¿½e par la Free Software
+Foundation (version 2 ou bien toute autre version ultï¿½rieure choisie par vous).
 
-Ce programme est distribué car potentiellement utile, mais SANS AUCUNE
+Ce programme est distribuï¿½ car potentiellement utile, mais SANS AUCUNE
 GARANTIE, ni explicite ni implicite, y compris les garanties de
-commercialisation ou d'adaptation dans un but spécifique. Reportez-vous à la
-Licence Publique Générale GNU pour plus de détails.
+commercialisation ou d'adaptation dans un but spï¿½cifique. Reportez-vous ï¿½ la
+Licence Publique Gï¿½nï¿½rale GNU pour plus de dï¿½tails.
 
-Vous devez avoir reçu une copie de la Licence Publique Générale GNU en même
-temps que ce programme ; si ce n'est pas le cas, écrivez à la Free Software
+Vous devez avoir reï¿½u une copie de la Licence Publique Gï¿½nï¿½rale GNU en mï¿½me
+temps que ce programme ; si ce n'est pas le cas, ï¿½crivez ï¿½ la Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
-États-Unis.
+ï¿½tats-Unis.
 
 Contact: Guillaume.Huard@imag.fr
-	 Bâtiment IMAG
+	 Bï¿½timent IMAG
 	 700 avenue centrale, domaine universitaire
-	 38401 Saint Martin d'Hères
+	 38401 Saint Martin d'Hï¿½res
 */
 #include "arm_instruction.h"
 #include "arm_exception.h"
@@ -28,7 +28,116 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_constants.h"
 #include "util.h"
 
+int is_set(arm_core p, int flag) {
+    uint32_t val = arm_read_cpsr(p);
+
+    return get_bit(val, flag);
+}
+
+int is_clear(arm_core p, int flag) {
+    return !is_set(p, flag);
+}
+
+/*
+    Cette fonction utilise le champ cond (bits 28 Ã  31)
+    de l'instruction pour savoir si celle-ci doit Ãªtre
+    exÃ©cutÃ©e ou non
+*/
+int check_cond(arm_core p, uint32_t inst) {
+    int cond_field = (inst >> 28) & 0xF; // On rÃ©cupÃ¨re les bits 28 Ã  31
+
+    switch (cond_field) {
+    case 0: // EQ
+        return is_set(p, Z);
+    case 1: // NE
+        return is_clear(p, Z);
+    case 2: // CS
+        return is_set(p, C);
+    case 3: // CC
+        return is_clear(p, C);
+    case 4: // MI
+        return is_set(p, N);
+    case 5: // PL
+        return is_clear(p, N);
+    case 6: // VS
+        return is_set(p, V);
+    case 7: // VC
+        return is_clear(p, V);
+    case 8: // HI
+        return is_set(p, C) && is_clear(p, Z);
+    case 9: // LS
+        return is_clear(p, C) || is_set(p, Z);
+    case 10: // GE
+        return is_set(p, N) == is_set(p, V);
+    case 11: // LT
+        return is_set(p, N) != is_set(p, V);
+    case 12: // GT
+        return is_clear(p, Z) && (is_set(p, N) == is_set(p, V));
+    case 13: // LE
+        return is_set(p, Z) || is_set(p, N) != is_set(p, V);
+    case 14: // AL
+        return 1;
+    case 15: // Ne devrait jamais arriver
+    default: // Ne devrait jamais arriver
+        return 0;
+    }
+}
+
 static int arm_execute_instruction(arm_core p) {
+    uint32_t inst;
+    arm_fetch(p, &inst);
+
+    printf("%x\n", inst);  // TMP
+
+    if(!check_cond(p, inst)) return 0;
+
+    if(!get_bit(inst, 27)) {
+        if(!get_bit(inst, 26)) {
+            if((((inst >> 20) & 0x1F) == 0b10010) && !get_bit(inst, 7)) {
+                printf("BRANCH AND EXCHANGE\n");
+            } else if(get_bit(inst, 25) || !(get_bit(inst, 7) && get_bit(inst, 4))) {
+                printf("DATA PROCESSING / PSR TRANSFER\n");
+            } else if(get_bit(inst, 6) || get_bit(inst, 5)) {
+                printf("HALFWORD DATA TRANSFER\n");
+            } else if(get_bit(inst, 24)) {
+                printf("SINGLE DATA SWAP\n");
+            } else if(get_bit(inst, 23)) {
+                printf("MULTIPLY LONG\n");
+            } else {
+                printf("MULTIPLY\n");
+            }
+        } else {
+            if(get_bit(inst, 25) && get_bit(inst, 4)) {
+                printf("UNDEFINED\n");
+            } else {
+                printf("SINGLE DATA TRANSFER\n");
+            }
+        }
+    } else {
+        if(!get_bit(inst, 26)) {
+            if(!get_bit(inst, 25)) {
+                printf("BLOCK DATA TRANSFER\n");
+            } else {
+                printf("BRANCH\n");
+            }
+        } else {
+            if(!get_bit(inst, 25)) {
+                printf("COPROCESSOR DATA TRANSFER\n");
+            } else {
+                if(!get_bit(inst, 24)) {
+                    if(!get_bit(inst, 4)) {
+                        printf("COPROCESSOR DATA OPERATION\n");
+                    } else {
+                        printf("COPROCESSOR REGISTER TRANSFER\n");
+                    }
+                } else {
+                    printf("SOFTWARE INTERRUPT\n");
+                    return arm_coprocessor_others_swi(p, inst);
+                }
+            }
+        }
+    }
+
     return 0;
 }
 
