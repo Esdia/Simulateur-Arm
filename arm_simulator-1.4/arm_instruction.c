@@ -47,37 +47,36 @@ int check_cond(arm_core p, uint32_t inst) {
     int cond_field = (inst >> 28) & 0xF; // On récupère les bits 28 à 31
 
     switch (cond_field) {
-    case 0: // EQ
+    case EQ:
         return is_set(p, Z);
-    case 1: // NE
+    case NE:
         return is_clear(p, Z);
-    case 2: // CS
+    case CS:
         return is_set(p, C);
-    case 3: // CC
+    case CC:
         return is_clear(p, C);
-    case 4: // MI
+    case MI:
         return is_set(p, N);
-    case 5: // PL
+    case PL:
         return is_clear(p, N);
-    case 6: // VS
+    case VS:
         return is_set(p, V);
-    case 7: // VC
+    case VC:
         return is_clear(p, V);
-    case 8: // HI
+    case HI:
         return is_set(p, C) && is_clear(p, Z);
-    case 9: // LS
+    case LS:
         return is_clear(p, C) || is_set(p, Z);
-    case 10: // GE
+    case GE:
         return is_set(p, N) == is_set(p, V);
-    case 11: // LT
+    case LT:
         return is_set(p, N) != is_set(p, V);
-    case 12: // GT
+    case GT:
         return is_clear(p, Z) && (is_set(p, N) == is_set(p, V));
-    case 13: // LE
+    case LE:
         return is_set(p, Z) || is_set(p, N) != is_set(p, V);
-    case 14: // AL
+    case AL:
         return 1;
-    case 15: // Ne devrait jamais arriver
     default: // Ne devrait jamais arriver
         return 0;
     }
