@@ -29,13 +29,11 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 
 int is_set(arm_core p, int flag) {
-    uint32_t val = arm_read_cpsr(p);
-
-    return get_bit(val, flag);
+    return get_flag(p, flag);
 }
 
 int is_clear(arm_core p, int flag) {
-    return !is_set(p, flag);
+    return !get_flag(p, flag);
 }
 
 /*
