@@ -93,7 +93,7 @@ static int arm_execute_instruction(arm_core p) {
             if((((inst >> 20) & 0x1F) == 0b10010) && !get_bit(inst, 7)) {
                 printf("BRANCH AND EXCHANGE\n");
             } else if(get_bit(inst, 25) || !(get_bit(inst, 7) && get_bit(inst, 4))) {
-                printf("DATA PROCESSING / PSR TRANSFER\n");
+                return arm_data_processing(p, inst);
             } else if(get_bit(inst, 6) || get_bit(inst, 5)) {
                 printf("HALFWORD DATA TRANSFER\n");
             } else if(get_bit(inst, 24)) {
