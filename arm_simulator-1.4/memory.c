@@ -64,7 +64,7 @@ int memory_read_byte(memory mem, uint32_t address, uint8_t *value) {
     if(address >= memory_get_size(mem)) return -1;
 
     *value = mem->data[address];
-    return 1;
+    return 0;
 }
 
 int memory_read_half(memory mem, uint32_t address, uint16_t *value) {
@@ -79,7 +79,7 @@ int memory_read_half(memory mem, uint32_t address, uint16_t *value) {
     } else {
         *value = ((uint16_t) mem->data[address+1]) << 8 | mem->data[address];
     }
-    return 1;
+    return 0;
 }
 
 int memory_read_word(memory mem, uint32_t address, uint32_t *value) {
@@ -94,11 +94,11 @@ int memory_read_word(memory mem, uint32_t address, uint32_t *value) {
     } else {
         *value = (mem->data[address+3] << 24) | (mem->data[address+2] << 16) | (mem->data[address+1] << 8) | (mem->data[address]);
     }
-    return 1;
+    return 0;
 }
 
 int memory_write_byte(memory mem, uint32_t address, uint8_t value) {
-    if(address >= memory_get_size(mem)) return 1;
+    if(address >= memory_get_size(mem)) return -1;
 
     mem->data[address] = value;
     return 0;
@@ -106,10 +106,10 @@ int memory_write_byte(memory mem, uint32_t address, uint8_t value) {
 
 int memory_write_half(memory mem, uint32_t address, uint16_t value) {
     // On fait -1 car on écrit sur l'octet à address, et celui d'après
-    if(address >= memory_get_size(mem) - 1) return 1;
+    if(address >= memory_get_size(mem) - 1) return -1;
 
     // Un half-word s'écrit sur une adresse multiple de 2
-    if(address % 2 != 0) return 1;
+    if(address % 2 != 0) return -1;
 
     uint16_t mask = 0x00FF;
 
@@ -125,10 +125,10 @@ int memory_write_half(memory mem, uint32_t address, uint16_t value) {
 
 int memory_write_word(memory mem, uint32_t address, uint32_t value) {
     // On fait -3 car on lit l'octet à address, et les trois suivants
-    if(address >= memory_get_size(mem) - 3) return 1;
+    if(address >= memory_get_size(mem) - 3) return -1;
 
     // Un word s'écrit sur une adresse multiple de 4
-    if(address % 4 != 0) return 1;
+    if(address % 4 != 0) return -1;
 
     uint32_t mask = 0x000000FF;
 
