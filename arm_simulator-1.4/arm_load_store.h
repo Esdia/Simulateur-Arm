@@ -25,6 +25,17 @@ Contact: Guillaume.Huard@imag.fr
 #include <stdint.h>
 #include "arm_core.h"
 
+enum OpAccMem {
+  LDR,
+  LDRB,
+  LDRH,
+  STR,
+  STRB,
+  STRH,
+  LDM, // LDM(1)
+  STM // STM(1)
+};
+
 int arm_load_store(arm_core p, uint32_t ins);
 int arm_load_store_multiple(arm_core p, uint32_t ins);
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
