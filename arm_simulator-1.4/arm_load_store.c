@@ -30,6 +30,26 @@ int arm_load_store(arm_core p, uint32_t ins) {
     return UNDEFINED_INSTRUCTION;
 }
 
+int arm_load_store_halfword(arm_core p, uint32_t ins) {
+    unint16_t value;
+    uint8_t rn = (ins >> 16) & 0xF;
+    uint8_t rd = (ins >> 12) & 0xF;
+    int I = get_bit(ins, 22);
+    int L = get_bit(ins, 20);
+    uint32_t address = arm_read_register(p, rn);
+    if (I == 0) {
+      uint8_t addr_mode = ins & 0xF;
+    } else {
+      uint8_t addr_mode = (ins & 0xF)  & ((ins >> 4) & 0xF) ;
+    }
+    if (L == 1) {
+      arm_read_half(p, address, &value);
+    }else{
+      arm_write_half( p, address, value);
+    }
+    return 0;
+}
+
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
     return UNDEFINED_INSTRUCTION;
 }
