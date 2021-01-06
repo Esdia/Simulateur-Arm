@@ -29,11 +29,46 @@ Contact: Guillaume.Huard@imag.fr
 
 /* Decoding functions for different classes of instructions */
 int arm_data_processing_shift(arm_core p, uint32_t ins) {
-    return UNDEFINED_INSTRUCTION;
+	return UNDEFINED_INSTRUCTION;
+}
+	
+int arm_data_processing_immediate_msr(arm_core p, uint32_t ins) {
+    uint8_t typeVal = get_bit(ins, 25); // Imm/RM 
+	uint8_t PSR = get_bit(ins, 22); // SPSR/CPSR 
+	uint32_t val;
+
+	if(typeVal){
+		val = ins & 0xFF;
+		uint8_t rotate = (ins >> 8) & 0xF;
+		val = ror(val, rotate * 2);
+	}else{
+		val = arm_read_register(p, (ins & 0xF));
+		arm_write_spsr(p, val);
+	}
+	
+	if(PSR){
+		arm_write_spsr(p, val);
+	}else{
+		arm_write_cpsr(p, val)	;
+	}
+	
+	return 0;
 }
 
-int arm_data_processing_immediate_msr(arm_core p, uint32_t ins) {
-    return UNDEFINED_INSTRUCTION;
+int arm_data_nepunepu_immediate_mrs(arm_core p, uint32_t ins) {
+    uint8_t Rd = (ins >> 12) & 0xF;
+	uint8_t PSR = get_bit(ins, 22); // SPSR/CPSR 
+	uint32_t val;
+
+	if(PSR){
+		val = arm_read_spsr(p);
+	}else{
+		val = arm_read_cpsr(p);
+	}
+	
+	arm_write_register(p,Rd,val);
+
+	return 0;
 }
 
 /* Valeur de retour : la retenue sortante (C) */
