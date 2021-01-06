@@ -26,26 +26,55 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
+#define CP15_reg1_Ubit 0 //Non word-aligned addresses n'est pas supporté dans notre implémentation donc valeur à 0
+#define UNPREDICTABLE 0xFF 
+
 int arm_load_store(arm_core p, uint32_t ins) {
     return UNDEFINED_INSTRUCTION;
 }
 
 int arm_load_store_halfword(arm_core p, uint32_t ins) {
-    unint16_t value;
+    uint16_t data;
     uint8_t rn = (ins >> 16) & 0xF;
     uint8_t rd = (ins >> 12) & 0xF;
-    int I = get_bit(ins, 22);
+    //int I = get_bit(ins, 22);
     int L = get_bit(ins, 20);
-    uint32_t address = arm_read_register(p, rn);
+#if 0
+    uint8_t addr_mode;
     if (I == 0) {
-      uint8_t addr_mode = ins & 0xF;
+      addr_mode = ins & 0xF;
     } else {
-      uint8_t addr_mode = (ins & 0xF)  & ((ins >> 4) & 0xF) ;
+      addr_mode = (ins & 0xF)  & ((ins >> 4) & 0xF) ;
     }
-    if (L == 1) {
-      arm_read_half(p, address, &value);
-    }else{
-      arm_write_half( p, address, value);
+#endif
+    //MemoryAccess(B-bit, E-bit)
+    uint32_t address = arm_read_register(p, rn); // ?? [address,2]
+    if (L==1) {
+      if (CP15_reg1_Ubit == 0) {
+       if (1) { // if (address[0] == 0) {
+         // data = Memory[address,2] 
+         arm_read_half(p, address, &data);
+       } else {
+         data = UNPREDICTABLE ;
+       }
+     } else { /* CP15_reg1_Ubit == 1 */
+       //data = Memory[address,2]
+       arm_read_half(p, address, &data) ;
+     }
+     //Rd = ZeroExtend(data[15:0])
+     arm_write_register( p, rd, data);
+    } else {
+      //processor_id = ExecutingProcessor()
+      data =  arm_read_register(p, rd);
+      if (CP15_reg1_Ubit == 0) {
+           arm_write_half( p, address, data);    
+      }else{ /* CP15_reg1_Ubit ==1 */
+        arm_write_half( p, address, data);
+      }
+      // Ceci est nécessaire pour les mémoires partagées non implémentées
+      //if (Shared(address)) { /* ARMv6 */
+        //physical_address = TLB(address);
+        //ClearExclusiveByAddress(physical_address,processor_id,2); }
     }
     return 0;
 }
