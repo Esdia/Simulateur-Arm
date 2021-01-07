@@ -71,6 +71,14 @@ int arm_data_nepunepu_immediate_mrs(arm_core p, uint32_t ins) {
 	return 0;
 }
 
+int arm_psr_transfer(arm_core p, uint32_t inst) {
+	if(get_bit(inst, 21)) {
+		return arm_data_processing_immediate_msr(p, inst);
+	} else {
+		return arm_data_nepunepu_immediate_mrs(p, inst);
+	}
+}
+
 /* Valeur de retour : la retenue sortante (C) */
 int get_op2(arm_core p, uint32_t inst, uint32_t* op2, int immediate_op) {
 	int c = 0;
