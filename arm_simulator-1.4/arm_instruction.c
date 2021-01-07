@@ -80,62 +80,136 @@ int check_cond(arm_core p, uint32_t inst) {
     }
 }
 
-static int arm_execute_instruction(arm_core p) {
-    uint32_t inst;
-    arm_fetch(p, &inst);
-
-    printf("%x\n", inst);  // TMP
-
-    if(!check_cond(p, inst)) return 0;
-
-    if(!get_bit(inst, 27)) {
-        if(!get_bit(inst, 26)) {
-            if((((inst >> 20) & 0x1F) == 0b10010) && !get_bit(inst, 7)) {
-                printf("BRANCH AND EXCHANGE\n");
-            } else if(get_bit(inst, 25) || !(get_bit(inst, 7) && get_bit(inst, 4))) {
-                return arm_data_processing(p, inst);
-            } else if(get_bit(inst, 6) || get_bit(inst, 5)) {
-                printf("HALFWORD DATA TRANSFER\n");
-            } else if(get_bit(inst, 24)) {
-                printf("SINGLE DATA SWAP\n");
-            } else if(get_bit(inst, 23)) {
-                printf("MULTIPLY LONG\n");
+int get_category_inst(uint32_t inst) {
+    if(get_bit(inst, 27)) {
+        if(get_bit(inst, 26)) {
+            if(get_bit(inst, 25)) {
+                if(get_bit(inst, 24)) {
+                    return SOFTWARE_INTERRUPT_INST;
+                } else {
+                    if(get_bit(inst, 4)) {
+                        return COPROCESSOR_REGISTER_TRANSFER;
+                    } else {
+                        return COPROCESSOR_DATA_OPERATION;
+                    }
+                }
             } else {
-                printf("MULTIPLY\n");
+                return COPROCESSOR_DATA_TRANSFER;
             }
         } else {
-            if(get_bit(inst, 25) && get_bit(inst, 4)) {
-                printf("UNDEFINED\n");
+            if(get_bit(inst, 25)) {
+                return BRANCH;
             } else {
-                printf("SINGLE DATA TRANSFER\n");
+                return BLOCK_DATA_TRANSFER;
             }
         }
     } else {
-        if(!get_bit(inst, 26)) {
-            if(!get_bit(inst, 25)) {
-                printf("BLOCK DATA TRANSFER\n");
+        if(get_bit(inst, 26)) {
+            if(get_bit(inst, 25) && get_bit(inst, 4)) {
+                return UNDEFINED;
             } else {
-                printf("BRANCH\n");
+                return SINGLE_DATA_TRANSFER;
             }
         } else {
-            if(!get_bit(inst, 25)) {
-                printf("COPROCESSOR DATA TRANSFER\n");
-            } else {
-                if(!get_bit(inst, 24)) {
-                    if(!get_bit(inst, 4)) {
-                        printf("COPROCESSOR DATA OPERATION\n");
-                    } else {
-                        printf("COPROCESSOR REGISTER TRANSFER\n");
-                    }
+            if(get_bit(inst, 24) && !get_bit(inst, 23) && !get_bit(inst, 20)) {
+                if(get_bit(inst, 25) || !get_bit(inst, 4)) {
+                    return PSR_TRANSFER;
                 } else {
-                    printf("SOFTWARE INTERRUPT\n");
-                    return arm_coprocessor_others_swi(p, inst);
+                    if(get_bit(inst, 6) || get_bit(inst, 5)) {
+                        return HALFWORD_DATA_TRANSFER;
+                    } else {
+                        if(get_bit(inst, 21)) {
+                            return BRANCH_EXCHANGE;
+                        } else {
+                            return SINGLE_DATA_SWAP;
+                        }
+                    }
+                }
+            } else {
+                if(get_bit(inst, 25) || !(get_bit(inst, 7) && get_bit(inst, 4))) {
+                    return DATA_PROCESSING;
+                } else {
+                    if(get_bit(inst, 6) || get_bit(inst, 5)) {
+                        return HALFWORD_DATA_TRANSFER;
+                    } else {
+                        if(get_bit(inst, 23)) {
+                            return MULTIPLY_LONG;
+                        } else {
+                            return MULTIPLY;
+                        }
+                    }
                 }
             }
         }
     }
+}
 
-    return 0;
+static int arm_execute_instruction(arm_core p) {
+    uint32_t inst;
+    arm_fetch(p, &inst);
+
+    printf("%x\n", inst);   // TMP
+
+    if(!check_cond(p, inst)) return 0;
+
+    int e = 0;
+
+    switch (get_category_inst(inst)) {
+        case DATA_PROCESSING:
+            printf("DATA_PROCESSING\n");
+            e = arm_data_processing(p, inst);
+            break;
+        case PSR_TRANSFER:
+            printf("PSR_TRANSFER\n");
+            e = arm_psr_transfer(p, inst);
+            break;
+        case MULTIPLY:
+            printf("MULTIPLY\n");
+            break;
+        case MULTIPLY_LONG:
+            printf("MULTIPLY_LONG\n");
+            break;
+        case SINGLE_DATA_SWAP:
+            printf("SINGLE_DATA_SWAP\n");
+            break;
+        case BRANCH_EXCHANGE:
+            printf("BRANCH_EXCHANGE\n");
+            break;
+        case HALFWORD_DATA_TRANSFER:
+            printf("HALFWORD_DATA_TRANSFER\n");
+            e = arm_load_store_halfword(p, inst);
+            break;
+        case SINGLE_DATA_TRANSFER:
+            printf("SINGLE_DATA_TRANSFER\n");
+            break;
+        case UNDEFINED:
+            printf("UNDEFINED\n");
+            break;
+        case BLOCK_DATA_TRANSFER:
+            printf("BLOCK_DATA_TRANSFER\n");
+            break;
+        case BRANCH:
+            printf("BRANCH\n");
+            break;
+        case COPROCESSOR_DATA_TRANSFER:
+            printf("COPROCESSOR_DATA_TRANSFER\n");
+            break;
+        case COPROCESSOR_DATA_OPERATION:
+            printf("COPROCESSOR_DATA_OPERATION\n");
+            break;
+        case COPROCESSOR_REGISTER_TRANSFER:
+            printf("COPROCESSOR_REGISTER_TRANSFER\n");
+            break;
+        case SOFTWARE_INTERRUPT_INST:
+            printf("SOFTWARE_INTERRUPT_INST\n");
+            e = arm_coprocessor_others_swi(p, inst);
+            break;
+        
+        default:    // Ne devrait jamais arriver
+            break;
+    }
+
+    return e;
 }
 
 int arm_step(arm_core p) {
