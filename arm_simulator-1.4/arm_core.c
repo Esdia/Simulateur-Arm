@@ -235,6 +235,18 @@ int get_flag(arm_core p, int flag) {
     return get_bit(val, flag);
 }
 
+void set_flags(arm_core p, int n, int z, int c, int v) {
+    uint32_t mask = ~(0xF << 28);
+    uint32_t cpsr_val = arm_read_cpsr(p);
+
+    uint32_t val = (n << N) | (z << Z) | (c << C) | (v << V);
+
+    cpsr_val &= mask;
+    cpsr_val |= val;
+
+    arm_write_cpsr(p, cpsr_val);
+}
+
 void set_flag(arm_core p, int flag, int val) {
     uint32_t cpsr_val = arm_read_cpsr(p);
     
