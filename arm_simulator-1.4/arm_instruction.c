@@ -28,12 +28,12 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_constants.h"
 #include "util.h"
 
-int is_set(arm_core p, int flag) {
-    return get_flag(p, flag);
+int is_set(uint32_t cpsr_val, int flag) {
+    return get_bit(cpsr_val, flag);
 }
 
-int is_clear(arm_core p, int flag) {
-    return !get_flag(p, flag);
+int is_clear(uint32_t cpsr_val, int flag) {
+    return !get_bit(cpsr_val, flag);
 }
 
 /*
@@ -44,35 +44,37 @@ int is_clear(arm_core p, int flag) {
 int check_cond(arm_core p, uint32_t inst) {
     int cond_field = (inst >> 28) & 0xF; // On récupère les bits 28 à 31
 
+    uint32_t cpsr_val = arm_read_cpsr(p);
+
     switch (cond_field) {
     case EQ:
-        return is_set(p, Z);
+        return is_set(cpsr_val, Z);
     case NE:
-        return is_clear(p, Z);
+        return is_clear(cpsr_val, Z);
     case CS:
-        return is_set(p, C);
+        return is_set(cpsr_val, C);
     case CC:
-        return is_clear(p, C);
+        return is_clear(cpsr_val, C);
     case MI:
-        return is_set(p, N);
+        return is_set(cpsr_val, N);
     case PL:
-        return is_clear(p, N);
+        return is_clear(cpsr_val, N);
     case VS:
-        return is_set(p, V);
+        return is_set(cpsr_val, V);
     case VC:
-        return is_clear(p, V);
+        return is_clear(cpsr_val, V);
     case HI:
-        return is_set(p, C) && is_clear(p, Z);
+        return is_set(cpsr_val, C) && is_clear(cpsr_val, Z);
     case LS:
-        return is_clear(p, C) || is_set(p, Z);
+        return is_clear(cpsr_val, C) || is_set(cpsr_val, Z);
     case GE:
-        return is_set(p, N) == is_set(p, V);
+        return is_set(cpsr_val, N) == is_set(cpsr_val, V);
     case LT:
-        return is_set(p, N) != is_set(p, V);
+        return is_set(cpsr_val, N) != is_set(cpsr_val, V);
     case GT:
-        return is_clear(p, Z) && (is_set(p, N) == is_set(p, V));
+        return is_clear(cpsr_val, Z) && (is_set(cpsr_val, N) == is_set(cpsr_val, V));
     case LE:
-        return is_set(p, Z) || is_set(p, N) != is_set(p, V);
+        return is_set(cpsr_val, Z) || is_set(cpsr_val, N) != is_set(cpsr_val, V);
     case AL:
         return 1;
     default: // Ne devrait jamais arriver
