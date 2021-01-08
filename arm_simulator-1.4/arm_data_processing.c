@@ -142,7 +142,7 @@ int get_op2(arm_core p, uint32_t inst, uint32_t* op2, int immediate_op) {
 /* Décode et exécute une instruction de type data processing */
 int arm_data_processing(arm_core p, uint32_t inst) {
 	int immediate_op = get_bit(inst, 25); // Bit I
-	int set_flags = get_bit(inst, 20); // Bit S
+	int set = get_bit(inst, 20); // Bit S
 
 	uint8_t rn = (inst >> 16) & 0xF; // Bits 16 à 19
 	uint32_t op1 = arm_read_register(p, rn);
@@ -205,29 +205,30 @@ int arm_data_processing(arm_core p, uint32_t inst) {
 	}
 
 	if(op_code == TST || op_code == TEQ || op_code == CMP || op_code == CMN) {
-		set_flags = 1;
+		set = 1;
 	} else {
 		arm_write_register(p, rd, (uint32_t) result);
 	}
 
-	if(set_flags) {
-		set_flag(p, Z, result == 0);
-		set_flag(p, N, get_bit(result, 31));
+	if(set) {
+		int n = get_bit(result, 31);
+		int z = (result == 0);
 
+		int v = 0;
 		if(op_code == SUB || op_code == RSB || op_code == ADD || op_code == ADC || op_code == SBC || op_code == RSC || op_code == CMP || op_code == CMN) {
 			// Opérations arithmétiques
 			c = get_bit(result, 32);
 
-			int v = 0;
 			if(op_code == ADD || op_code == ADC || op_code == CMN) {
 				v = (get_bit(op1, 31) == get_bit(op2, 31)) && (get_bit(op1, 31) != c);
 			} else {
 				v = (get_bit(op1, 31) != get_bit(op2, 31)) && (get_bit(op2, 31) == c);
 			}
-			set_flag(p, V, v);
+		} else {
+			v = get_flag(p, V);
 		}
 
-		set_flag(p, C, c);
+		set_flags(p, n, z, c, v);
 	}
 
 	return 0;
