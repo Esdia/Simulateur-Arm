@@ -176,6 +176,7 @@ static int arm_execute_instruction(arm_core p) {
             break;
         case BRANCH_EXCHANGE:
             printf("BRANCH_EXCHANGE\n");
+            e = arm_miscellaneous(p, inst);
             break;
         case HALFWORD_DATA_TRANSFER:
             printf("HALFWORD_DATA_TRANSFER\n");
@@ -192,6 +193,7 @@ static int arm_execute_instruction(arm_core p) {
             break;
         case BRANCH:
             printf("BRANCH\n");
+            e = arm_branch(p,inst);
             break;
         case COPROCESSOR_DATA_TRANSFER:
             printf("COPROCESSOR_DATA_TRANSFER\n");

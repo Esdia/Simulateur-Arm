@@ -23,12 +23,26 @@ Contact: Guillaume.Huard@imag.fr
 #include "arm_branch_other.h"
 #include "arm_constants.h"
 #include "util.h"
+#include "registers.h"
 #include <debug.h>
 #include <stdlib.h>
 
 
 int arm_branch(arm_core p, uint32_t ins) {
-    return UNDEFINED_INSTRUCTION;
+    uint8_t stock = get_bit(ins,24);
+    uint32_t offset = (ins & 0xFFFFFF) << 2;
+    uint32_t write_pc = arm_read_register(p,PC);
+
+    if(stock == 1){
+        arm_write_register(p,R14,write_pc);
+        arm_write_register(p,PC,write_pc + offset);
+    }
+
+    else{
+        arm_write_register(p,PC,write_pc + offset);
+    }
+
+    return 0;
 }
 
 int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
@@ -42,5 +56,17 @@ int arm_coprocessor_others_swi(arm_core p, uint32_t ins) {
 }
 
 int arm_miscellaneous(arm_core p, uint32_t ins) {
-    return UNDEFINED_INSTRUCTION;
+    uint8_t fetch = ins & 0xF;
+    uint8_t init = get_bit(ins,0);
+    
+    if(init == 0){
+        uint32_t write_in = arm_read_register(p,fetch);
+        arm_write_register(p,PC,write_in);
+    }
+    else{
+        printf("THUMB instructions are not handle in this version");
+        return UNDEFINED_INSTRUCTION;
+    }
+    
+    return 0;
 }
