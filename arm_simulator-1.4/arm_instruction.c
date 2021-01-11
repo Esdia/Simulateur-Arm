@@ -167,9 +167,11 @@ static int arm_execute_instruction(arm_core p) {
             break;
         case MULTIPLY:
             printf("MULTIPLY\n");
+            e = arm_multiply(p,inst);
             break;
         case MULTIPLY_LONG:
             printf("MULTIPLY_LONG\n");
+            e = arm_multiply_long(p,inst);
             break;
         case SINGLE_DATA_SWAP:
             printf("SINGLE_DATA_SWAP\n");

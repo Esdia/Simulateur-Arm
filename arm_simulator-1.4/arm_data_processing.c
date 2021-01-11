@@ -233,3 +233,128 @@ int arm_data_processing(arm_core p, uint32_t inst) {
 
 	return 0;
 }
+
+int arm_multiply(arm_core p, uint32_t ins){
+    uint8_t rd = (ins >> 16) & 0xF;
+    uint8_t rs = (ins >>8) & 0xF;
+    uint8_t rm = ins & 0xF;
+    uint32_t result;
+    
+    uint32_t opm = arm_read_register(p,rm);
+    uint32_t ops = arm_read_register(p,rs);
+    uint8_t n,z;
+
+    if(rd == rm){
+        printf("Rd and Rm register cannot be the same");
+        return DATA_ABORT;
+    }
+
+    if(get_bit(ins,21)){
+        uint8_t rn = (ins >> 12) & 0xF;
+        uint32_t opn = arm_read_register(p,rn);
+        result = opm * ops + opn;
+    }
+
+    else{
+        result = opm * ops;
+    }
+    
+    if(get_bit(ins,20)){
+        n = get_bit(result,31);
+        
+        if(result == 0){
+            z = 1;
+        }
+        else{
+            z = 0;
+        }
+        set_flags(p,n,z,0,0);
+    }
+    arm_write_register(p,rd,result);
+    return 0; 
+}
+
+int arm_multiply_long(arm_core p, uint32_t ins){
+    
+    uint8_t rdHi = (ins >> 16) & 0xF;
+    uint8_t rdLo = (ins >>12) & 0xF;
+    uint8_t rs = (ins >> 8) & 0xF;
+    uint8_t rm = ins & 0xF;
+    uint8_t n,z;
+
+    if(rdHi == rm || rdHi == rdLo || rdLo == rm){
+        printf("All registers must be the different");
+        return DATA_ABORT;
+    }
+
+    if(get_bit(ins,22)){
+        
+        uint64_t result;
+        uint32_t opm = arm_read_register(p,rm);
+        uint32_t ops = arm_read_register(p,rs);
+        uint32_t opHi = arm_read_register(p,rdHi);
+        uint32_t opLo = arm_read_register(p,rdLo);
+        uint64_t op_long = opLo | (opHi << 31);
+    
+
+        if(get_bit(ins,21)){
+            result = opm * ops + op_long;
+        }
+
+        else{
+            result = opm * ops;
+        }
+    
+        if(get_bit(ins,20)){
+            n = get_bit(result,31);
+        
+            if(result == 0){
+                z = 1;
+            }
+            else{
+                z = 0;
+            }
+            set_flags(p,n,z,0,0);
+        }
+        uint32_t resultLo = result;
+        uint32_t resultHi = result >> 31;
+
+        arm_write_register(p,rdLo,resultLo);
+        arm_write_register(p,rdHi,resultHi);
+    }
+    else{
+        int64_t result;
+        int32_t opm = arm_read_register(p,rm);
+        int32_t ops = arm_read_register(p,rs);
+        int32_t opHi = arm_read_register(p,rdHi);
+        int32_t opLo = arm_read_register(p,rdLo);
+        int64_t op_long = opLo | (opHi << 31);
+    
+        if(get_bit(ins,21)){
+            result = opm * ops + op_long;
+        }
+
+        else{
+            result = opm * ops;
+        }
+    
+        if(get_bit(ins,20)){
+            n = get_bit(result,31);
+        
+            if(result == 0){
+                z = 1;
+            }
+            else{
+                z = 0;
+            }
+            set_flags(p,n,z,0,0);
+        }
+        int32_t resultLo = result;
+        int32_t resultHi = result >> 31;
+
+        arm_write_register(p,rdLo,resultLo);
+        arm_write_register(p,rdHi,resultHi);
+    }
+
+    return 0;
+}
