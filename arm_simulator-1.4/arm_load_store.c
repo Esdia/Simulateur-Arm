@@ -80,7 +80,52 @@ int arm_load_store_halfword(arm_core p, uint32_t ins) {
 }
 
 int arm_load_store_multiple(arm_core p, uint32_t ins) {
-    return UNDEFINED_INSTRUCTION;
+    uint32_t data;
+    uint16_t rn = (ins >> 16) & 0xF;
+    int offset_pre=0;
+    int offset_post=4;
+    int i =0;
+    if(rn==15){
+      return UNDEFINED_INSTRUCTION;
+    }
+    int P = get_bit(ins, 24);
+    int U = get_bit(ins, 23);
+    //int S = get_bit(ins, 22);
+    int W = get_bit(ins, 21);
+    int L = get_bit(ins, 20);
+    if(P==1){
+      offset_pre=4;
+      offset_post=0;
+    }
+    if(U==0){
+      offset_post=-offset_post;
+      offset_pre=-offset_pre;
+    }
+    uint32_t address = arm_read_register(p, rn);
+    address&=0xFFFFFFFC;
+    if(L==1){ //load
+      for(i=0;i<15;i++){
+        if(get_bit(ins, i) == 1){
+          address=address+offset_pre;
+          arm_read_word(p, address, &data);
+          arm_write_register(p, i, data);
+          address=address+offset_post;
+        }
+      }
+    } else { //store
+      for(i=0;i<16;i++){
+        if(get_bit(ins, i) == 1){
+          address=address+offset_pre;
+          data = arm_read_register(p, i);
+          arm_write_word(p, address, data);
+          address=address+offset_post;          
+        }
+      }
+    }
+    if(W==1){
+      arm_write_register(p, rn, address);
+    }
+    return 0;
 }
 
 int arm_coprocessor_load_store(arm_core p, uint32_t ins) {
