@@ -193,6 +193,7 @@ static int arm_execute_instruction(arm_core p) {
             break;
         case BLOCK_DATA_TRANSFER:
             printf("BLOCK_DATA_TRANSFER\n");
+            e = arm_load_store_multiple(p, inst);
             break;
         case BRANCH:
             printf("BRANCH\n");
