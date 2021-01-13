@@ -32,7 +32,7 @@ Contact: Guillaume.Huard@imag.fr
 int arm_load_store(arm_core p, uint32_t inst) {
 
   
-  uint8_t decalage = inst & 0xFFF ; // 0 � 11  decalage
+  uint16_t decalage = inst & 0xFFF ; // 0 � 11  decalage
   uint8_t Rd = (inst >> 12 ) & 0xF ; // 12 � 15 registre 1 
   uint8_t Rn = (inst >> 16 ) & 0xF ; // 16 � 19 registre 2
   uint8_t L = get_bit(inst, 20); // 20 Load/store  
@@ -47,7 +47,7 @@ int arm_load_store(arm_core p, uint32_t inst) {
  
   uint32_t rlu = arm_read_register(p,Rn);
 
-  uint8_t offset ;
+  uint32_t offset ;
   if ( I == 0 ) {
     offset = decalage;
 
@@ -57,10 +57,10 @@ int arm_load_store(arm_core p, uint32_t inst) {
       uint32_t valeur = arm_read_register (p,Rm);
       switch(decalage>>5 & 3 ){
          case 0: 
-           offset = (valeur>>(decalage>>7));
+           offset = (valeur<<(decalage>>7));
            break ;
          case 1: 
-           offset =(valeur<<(decalage>>7));
+           offset =(valeur>>(decalage>>7));
            break ;
          case 2: 
            offset = asr(valeur,(decalage>>7));

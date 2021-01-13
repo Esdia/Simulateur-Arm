@@ -186,6 +186,7 @@ static int arm_execute_instruction(arm_core p) {
             break;
         case SINGLE_DATA_TRANSFER:
             printf("SINGLE_DATA_TRANSFER\n");
+            e = arm_load_store(p, inst);
             break;
         case UNDEFINED:
             printf("UNDEFINED\n");
