@@ -145,7 +145,6 @@ int arm_data_processing(arm_core p, uint32_t inst) {
 	int set = get_bit(inst, 20); // Bit S
 
 	uint8_t rn = (inst >> 16) & 0xF; // Bits 16 à 19
-	uint32_t op1 = arm_read_register(p, rn);
 
 	uint8_t rd = (inst >> 12) & 0xF; // Bits 12 à 15
 
@@ -153,6 +152,10 @@ int arm_data_processing(arm_core p, uint32_t inst) {
 	int c = get_op2(p, inst, &op2, immediate_op);
 
 	int op_code = (inst >> 21) & 0xF; // Bits 21 à 24
+	uint32_t op1;
+	if(op_code != MOV && op_code != MVN) {
+		op1 = arm_read_register(p, rn);
+	}
 
 	uint64_t result = 0;
 	uint32_t tmp = 0;
