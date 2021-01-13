@@ -150,53 +150,42 @@ static int arm_execute_instruction(arm_core p) {
     uint32_t inst;
     arm_fetch(p, &inst);
 
-    printf("%x\n", inst);   // TMP
-
     if(!check_cond(p, inst)) return 0;
 
     int e = 0;
 
     switch (get_category_inst(inst)) {
         case DATA_PROCESSING:
-            printf("DATA_PROCESSING\n");
             e = arm_data_processing(p, inst);
             break;
         case PSR_TRANSFER:
-            printf("PSR_TRANSFER\n");
             e = arm_psr_transfer(p, inst);
             break;
         case MULTIPLY:
-            printf("MULTIPLY\n");
             e = arm_multiply(p,inst);
             break;
         case MULTIPLY_LONG:
-            printf("MULTIPLY_LONG\n");
             e = arm_multiply_long(p,inst);
             break;
         case SINGLE_DATA_SWAP:
             e = arm_data_persona_SWP(p,inst);
             break;
         case BRANCH_EXCHANGE:
-            printf("BRANCH_EXCHANGE\n");
             e = arm_miscellaneous(p, inst);
             break;
         case HALFWORD_DATA_TRANSFER:
-            printf("HALFWORD_DATA_TRANSFER\n");
             e = arm_load_store_halfword(p, inst);
             break;
         case SINGLE_DATA_TRANSFER:
-            printf("SINGLE_DATA_TRANSFER\n");
             e = arm_load_store(p, inst);
             break;
         case UNDEFINED:
             printf("UNDEFINED\n");
             break;
         case BLOCK_DATA_TRANSFER:
-            printf("BLOCK_DATA_TRANSFER\n");
             e = arm_load_store_multiple(p, inst);
             break;
         case BRANCH:
-            printf("BRANCH\n");
             e = arm_branch(p,inst);
             break;
         case COPROCESSOR_DATA_TRANSFER:
@@ -209,7 +198,6 @@ static int arm_execute_instruction(arm_core p) {
             printf("COPROCESSOR_REGISTER_TRANSFER\n");
             break;
         case SOFTWARE_INTERRUPT_INST:
-            printf("SOFTWARE_INTERRUPT_INST\n");
             e = arm_coprocessor_others_swi(p, inst);
             break;
         
