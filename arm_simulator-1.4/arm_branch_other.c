@@ -40,7 +40,7 @@ int arm_branch(arm_core p, uint32_t ins) {
     uint32_t write_pc = arm_read_register(p,PC);
 
     if(stock == 1){
-        arm_write_register(p,R14,write_pc);
+        arm_write_register(p,R14,write_pc - 4);
         arm_write_register(p,PC,write_pc + offset);
     }
 
@@ -67,7 +67,7 @@ int arm_miscellaneous(arm_core p, uint32_t ins) {
     
     if(init == 0){
         uint32_t write_in = arm_read_register(p,fetch);
-        arm_write_register(p,PC,write_in - 4);
+        arm_write_register(p,PC,write_in);
     }
     else{
         printf("THUMB instructions are not handle in this version");
