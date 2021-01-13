@@ -35,8 +35,8 @@ enum OpAccMem {
   LDM, // LDM(1)
   STM // STM(1)
 };
-
-int arm_load_store(arm_core p, uint32_t ins);
+void joker_arsene( uint32_t rlu , int L , int B  , uint8_t rd , arm_core p);
+int arm_load_store(arm_core p, uint32_t inst);
 int arm_load_store_halfword(arm_core p, uint32_t ins);
 int arm_load_store_multiple(arm_core p, uint32_t ins);
 int arm_coprocessor_load_store(arm_core p, uint32_t ins);
