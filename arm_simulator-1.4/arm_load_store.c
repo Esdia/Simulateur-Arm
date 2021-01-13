@@ -1,24 +1,24 @@
 /*
-Armator - simulateur de jeu d'instruction ARMv5T à but pédagogique
+Armator - simulateur de jeu d'instruction ARMv5T ï¿½ but pï¿½dagogique
 Copyright (C) 2011 Guillaume Huard
 Ce programme est libre, vous pouvez le redistribuer et/ou le modifier selon les
-termes de la Licence Publique Générale GNU publiée par la Free Software
-Foundation (version 2 ou bien toute autre version ultérieure choisie par vous).
+termes de la Licence Publique Gï¿½nï¿½rale GNU publiï¿½e par la Free Software
+Foundation (version 2 ou bien toute autre version ultï¿½rieure choisie par vous).
 
-Ce programme est distribué car potentiellement utile, mais SANS AUCUNE
+Ce programme est distribuï¿½ car potentiellement utile, mais SANS AUCUNE
 GARANTIE, ni explicite ni implicite, y compris les garanties de
-commercialisation ou d'adaptation dans un but spécifique. Reportez-vous à la
-Licence Publique Générale GNU pour plus de détails.
+commercialisation ou d'adaptation dans un but spï¿½cifique. Reportez-vous ï¿½ la
+Licence Publique Gï¿½nï¿½rale GNU pour plus de dï¿½tails.
 
-Vous devez avoir reçu une copie de la Licence Publique Générale GNU en même
-temps que ce programme ; si ce n'est pas le cas, écrivez à la Free Software
+Vous devez avoir reï¿½u une copie de la Licence Publique Gï¿½nï¿½rale GNU en mï¿½me
+temps que ce programme ; si ce n'est pas le cas, ï¿½crivez ï¿½ la Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307,
-États-Unis.
+ï¿½tats-Unis.
 
 Contact: Guillaume.Huard@imag.fr
-	 Bâtiment IMAG
+	 Bï¿½timent IMAG
 	 700 avenue centrale, domaine universitaire
-	 38401 Saint Martin d'Hères
+	 38401 Saint Martin d'Hï¿½res
 */
 #include "arm_load_store.h"
 #include "arm_exception.h"
@@ -26,17 +26,17 @@ Contact: Guillaume.Huard@imag.fr
 #include "util.h"
 #include "debug.h"
 
-#define CP15_reg1_Ubit 0 //Non word-aligned addresses n'est pas supporté dans notre implémentation donc valeur à 0
+#define CP15_reg1_Ubit 0 //Non word-aligned addresses n'est pas supportï¿½ dans notre implï¿½mentation donc valeur ï¿½ 0
 #define UNPREDICTABLE 0xFF 
 
 int arm_load_store(arm_core p, uint32_t inst) {
 
   
-  uint8_t decalage = inst & 0xFFF ; // 0 à 11  decalage
-  uint8_t Rd = (inst >> 12 ) & 0xF ; // 12 à 15 registre 1 
-  uint8_t Rn = (inst >> 16 ) & 0xF ; // 16 à 19 registre 2
+  uint8_t decalage = inst & 0xFFF ; // 0 ï¿½ 11  decalage
+  uint8_t Rd = (inst >> 12 ) & 0xF ; // 12 ï¿½ 15 registre 1 
+  uint8_t Rn = (inst >> 16 ) & 0xF ; // 16 ï¿½ 19 registre 2
   uint8_t L = get_bit(inst, 20); // 20 Load/store  
-  uint8_t W = get_bit(inst, 21); // 21 si w = 1 récrit la valeur dans celui de depart aprés le decalage
+  uint8_t W = get_bit(inst, 21); // 21 si w = 1 rï¿½crit la valeur dans celui de depart aprï¿½s le decalage
   uint8_t B = get_bit(inst, 22); // 22 loadB ou load / store ou storeB  
   uint8_t U = get_bit(inst, 23); // 23 u = 1 u = 0 
   uint8_t P = get_bit(inst, 24); // 24 p decalage avant = 1 ou apres = 0 le transfer  si P = 0 alors w  = 0 
@@ -55,17 +55,17 @@ int arm_load_store(arm_core p, uint32_t inst) {
   else {
       uint8_t Rm = inst & 0xF ;
       uint32_t valeur = arm_read_register (p,Rm);
-      switch(decalage>>5 && 3 ){
-         case '0': 
+      switch(decalage>>5 & 3 ){
+         case 0: 
            offset = (valeur>>(decalage>>7));
            break ;
-         case '1': 
+         case 1: 
            offset =(valeur<<(decalage>>7));
            break ;
-         case '2': 
+         case 2: 
            offset = asr(valeur,(decalage>>7));
            break ;
-         case '3': 
+         case 3: 
            offset = ror(valeur,(decalage>>7));
            break ;
       }
@@ -93,6 +93,9 @@ int arm_load_store(arm_core p, uint32_t inst) {
 
 void joker_arsene ( uint32_t rlu , int L , int B  , uint8_t rd , arm_core p){
   uint32_t  val ;
+  if(!B){
+    rlu &= 0xFFFFFFFC;
+  }
   if (L == 1 ){
     if ( B == 0 ) {
       arm_read_word(p,rlu, &val);
@@ -105,15 +108,24 @@ void joker_arsene ( uint32_t rlu , int L , int B  , uint8_t rd , arm_core p){
   else {
     val = arm_read_register(p,rd) ;
     if ( B == 0) {
-      if (rlu % 4 != 0) {
-          rlu = rlu & 0xFFFFFFFC;
-        }
       arm_write_word(p,rlu,val);  
       }
     else {
       arm_write_byte(p,rlu,val);
     }
   } 
+}
+
+int arm_data_persona_SWP(arm_core p, uint32_t ins) {
+  uint8_t Rd = (ins >> 12) & 0xF;
+	uint8_t Rn = (ins >> 16) & 0xF;
+	uint8_t Rm = ins & 0xF;
+	uint8_t B = get_bit(ins, 22); // byte/word
+
+	joker_arsene(arm_read_register(p,Rn),1,B,Rd,p);
+	joker_arsene(arm_read_register(p,Rn),0,B,Rm,p);
+
+  return 0;
 }
 
 int arm_load_store_halfword(arm_core p, uint32_t ins) {
@@ -154,7 +166,7 @@ int arm_load_store_halfword(arm_core p, uint32_t ins) {
       }else{ /* CP15_reg1_Ubit ==1 */
         arm_write_half( p, address, data);
       }
-      // Ceci est nécessaire pour les mémoires partagées non implémentées
+      // Ceci est nï¿½cessaire pour les mï¿½moires partagï¿½es non implï¿½mentï¿½es
       //if (Shared(address)) { /* ARMv6 */
         //physical_address = TLB(address);
         //ClearExclusiveByAddress(physical_address,processor_id,2); }

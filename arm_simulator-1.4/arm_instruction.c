@@ -174,7 +174,7 @@ static int arm_execute_instruction(arm_core p) {
             e = arm_multiply_long(p,inst);
             break;
         case SINGLE_DATA_SWAP:
-            printf("SINGLE_DATA_SWAP\n");
+            e = arm_data_persona_SWP(p,inst);
             break;
         case BRANCH_EXCHANGE:
             printf("BRANCH_EXCHANGE\n");
