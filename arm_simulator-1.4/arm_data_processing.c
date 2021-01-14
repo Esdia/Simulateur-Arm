@@ -294,11 +294,11 @@ int arm_multiply_long(arm_core p, uint32_t ins){
     if(get_bit(ins,22)){
         
         uint64_t result;
-        uint32_t opm = arm_read_register(p,rm);
-        uint32_t ops = arm_read_register(p,rs);
-        uint32_t opHi = arm_read_register(p,rdHi);
-        uint32_t opLo = arm_read_register(p,rdLo);
-        uint64_t op_long = opLo | (opHi << 31);
+        uint64_t opm = arm_read_register(p,rm);
+        uint64_t ops = arm_read_register(p,rs);
+        uint64_t opHi = arm_read_register(p,rdHi);
+        uint64_t opLo = arm_read_register(p,rdLo);
+        uint64_t op_long = opLo | (opHi << 32);
     
 
         if(get_bit(ins,21)){
@@ -321,18 +321,18 @@ int arm_multiply_long(arm_core p, uint32_t ins){
             set_flags(p,n,z,0,0);
         }
         uint32_t resultLo = result;
-        uint32_t resultHi = result >> 31;
+        uint32_t resultHi = result >> 32;
 
         arm_write_register(p,rdLo,resultLo);
         arm_write_register(p,rdHi,resultHi);
     }
     else{
         int64_t result;
-        int32_t opm = arm_read_register(p,rm);
-        int32_t ops = arm_read_register(p,rs);
-        int32_t opHi = arm_read_register(p,rdHi);
-        int32_t opLo = arm_read_register(p,rdLo);
-        int64_t op_long = opLo | (opHi << 31);
+        int64_t opm = arm_read_register(p,rm);
+        int64_t ops = arm_read_register(p,rs);
+        int64_t opHi = arm_read_register(p,rdHi);
+        int64_t opLo = arm_read_register(p,rdLo);
+        int64_t op_long = opLo | (opHi << 32);
     
         if(get_bit(ins,21)){
             result = opm * ops + op_long;
@@ -354,7 +354,7 @@ int arm_multiply_long(arm_core p, uint32_t ins){
             set_flags(p,n,z,0,0);
         }
         int32_t resultLo = result;
-        int32_t resultHi = result >> 31;
+        int32_t resultHi = result >> 32;
 
         arm_write_register(p,rdLo,resultLo);
         arm_write_register(p,rdHi,resultHi);
