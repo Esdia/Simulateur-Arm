@@ -1,5 +1,8 @@
 # Projet de Prog, L3 INFO
 
+Le fichier README.pdf (situé dans le même dossier que le fichier que vous lisez en ce moment même) reprend le même contenu que ce fichier markdown.  
+Il a été généré automatiquement avec l'outil [grip](https://github.com/joeyespo/grip).
+
 ## Compilation :  
 1. Se placer dans le dossier arm-simulator-1.4
 2. ./configure CFLAGS='-Wall -Werror -g'
