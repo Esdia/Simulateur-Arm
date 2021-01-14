@@ -157,7 +157,7 @@ int arm_data_processing(arm_core p, uint32_t inst) {
 		op1 = arm_read_register(p, rn);
 	}
 
-	uint64_t result = 0;
+	uint32_t result = 0;
 	uint32_t tmp = 0;
 	switch (op_code) {
 		case AND:
@@ -220,12 +220,13 @@ int arm_data_processing(arm_core p, uint32_t inst) {
 		int v = 0;
 		if(op_code == SUB || op_code == RSB || op_code == ADD || op_code == ADC || op_code == SBC || op_code == RSC || op_code == CMP || op_code == CMN) {
 			// Opérations arithmétiques
-			c = get_bit(result, 32);
 
 			if(op_code == ADD || op_code == ADC || op_code == CMN) {
-				v = (get_bit(op1, 31) == get_bit(op2, 31)) && (get_bit(op1, 31) != c);
+				v = (get_bit(op1, 31) == get_bit(op2, 31)) && (get_bit(op1, 31) != get_bit(result, 31));
+				c = (result < op1);
 			} else {
-				v = (get_bit(op1, 31) != get_bit(op2, 31)) && (get_bit(op2, 31) == c);
+				v = (get_bit(op1, 31) != get_bit(op2, 31)) && (get_bit(op2, 31) == get_bit(result, 31));
+				c = (op1 >= op2);	// Pour la soustraction, le flag C vaut 0 si il y a une retenue sortante.
 			}
 		} else {
 			v = get_flag(p, V);
