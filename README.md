@@ -49,7 +49,7 @@ Dans cet état, le simulateur attend des instructions de GDB.
 Il faut ensuite lancer gdb dans un autre terminal : `gdb` ou `arm-none-eabi-gdb`  
 Dans GDB, il faut ensuite exécuter la suite de commandes suivantes:
 ```
-file [fichier arm contenant le code à exécuter]
+file [fichier arm compilé contenant le code à exécuter]
 target remote localhost:[port_gdb]
 load
 ```
@@ -115,7 +115,7 @@ Pour la catégorie Software Interrupt, seul le cas `swi 0x123456` a été géré
 
 ## 4. Les différentes catégories
 
-Voici, pour chaque catégorie d'instruction implémentée, le fichier correspondant:
+Voici, pour chaque catégorie d'instruction implémentée, les fichiers correspondant:
 
 - `Data Processing`, `PSR Transfer`, `Multiply` et `Multiply Long` : arm_data_processing.c, arm_data_processing.h
 - `Single Data Swap`, `Halfword Data Transfer`, `Single Data Transfer`, `Block Data Transfer` : arm_load_store.c, arm_load_store.h
@@ -130,3 +130,39 @@ Voici les fonctionnalités demandées dans le sujet que nous n'avons pas implém
 ## 6. Bugs connus mais non résolus
 
 Nous n'avons connaissance d'aucun bug que nous n'avons pas résolu
+
+## 7. Tests réalisés
+
+Nous avons fait un fichier de test pour chaque catégorie d'instruction. Bien que non exhaustifs, nous estimons que ces tests couvrent une bonne partie des cas possibles.
+
+## 8. Journal décrivant la progression du travail et la répartition des tâches
+
+Ce journal est construit sur l'historique des commit.
+Certains membres du groupe utilisent un pseudonyme sur GitHub :
+- Esdia : Théo Hermitte
+- Walfyr : Leslie Metzger
+
+Nous avons grossièrement réparti le travail comme ceci:
+ - Théo Hermitte : Implémentation du noyau de base (mémoire + registres + parseur d'instructions) + Data Processing
+ - Leslie Metzger : PSR Transfer + Single Data Swap
+ - Nadim Babba : Halfword Data Transfer
+ - Rodolphe Beguin : Single Data Transfer
+ - Maxime Bouchenoua : Block Data Transfer
+ - Thomas Delatte : Branch + Branch Exchange + Multiply + Multiply Long
+
+Journal détaillé :
+- 31/12 - Mise en place du dépôt Git, répartition du travail
+- 01/01 - Implémentation de la mémoire (Théo Hermitte)
+- 02/01 - Implémentation des registres (Théo Hermitte)
+- 03/01 - Correction d'un problème fatal dans l'implémentation de la mémoire (Nadim Babba)
+- 04/01 - Implémentation du parseur d'instructions + quelques fonctions utilitaires (get_flag, set_flag..) (Théo Hermitte)
+- 04/01 - Implémentation des instructions de data processing (Théo Hermitte)
+- 06/01 - Implémentation des instructions de halfword data transfer (Nadim Babba)
+- 06/01 - Implémentation des instructions de PSR Transfer (Leslie Metzger)
+- 07/01-08/01 - Corrections de bugs et modifications mineures dans le parseur d'instructions (Théo Hermitte)
+- 11/01 - Implémentation des instructions de branchage (Thomas Delatte)
+- 11/01 - Implémentation des instructions de multiplication (Thomas Delatte)
+- 12/01 - Implémentation des instructions de block data transfer (Maxime Bouchenoua)
+- 13/01 - Implémentation des instructions de single data transfer (Rodolphe Beguin)
+- 13/01 - Implémentation des instructions de single data swap (Leslie Metzger)
+- 13/01 - Correction de bugs divers dans les instructions de data processing (Théo Hermitte)
